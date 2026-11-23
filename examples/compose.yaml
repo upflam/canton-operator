@@ -1,0 +1,55 @@
+# Deploy the update agent as its own compose project, beside the validator stack.
+#   1) create a .env next to this file (see .env.example)
+#   2) docker compose up -d
+#
+# Running outside the validator's compose project means recreating the validator
+# never restarts the agent.
+#
+# The AI classifier sidecar needs ~2 GB RAM. To skip it, set UPDATE_MODE=always
+# in .env and run with --scale laya=0.
+
+name: validator-update-agent
+
+services:
+  agent:
+    container_name: splice-updater
+    image: ghcr.io/upflam/canton-operator:latest
+    restart: unless-stopped
+
+    # Root is needed to read the mounted docker.sock.
+    user: "0:0"
+
+    # Optional; without SV_SEED_SCAN_URL the scan URL is read from the validator container.
+    env_file:
+      - path: .env
+        required: false
+
+    environment:
+      - UPDATE_MODE=ai
+      - AI_CLASSIFIER_URL=http://laya:8000
+
+    volumes:
+      # Raw socket access is root-equivalent; in production prefer a socket-proxy
+      # such as tecnativa/docker-socket-proxy.
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    # To join the validator's compose network (e.g. for internal hostname resolution):
+    # networks:
+    #   - validator_default
+
+  laya:
+    image: ghcr.io/upflam/canton-operator:laya-latest
+    container_name: splice-laya
+    restart: unless-stopped
+    cpus: "2"
+    mem_limit: 2g
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; urllib.request.urlopen('http://localhost:8000/health',timeout=3)\" || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+# networks:
+#   validator_default:
+#     external: true

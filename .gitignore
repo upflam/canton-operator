@@ -1,0 +1,29 @@
+# build output
+/agent
+/validator-update-agent
+/slacktest
+# secrets / test keys — không commit
+*.b64
+*.sig
+priv*
+
+# repo này CÓ track docs (ghi đè global ignore "docs")
+!docs/
+!docs/**
+
+# internal, upflam-specific — kept locally for reference, not for the open-source repo
+docs/deploy-devnet.md
+
+# local env (webhook/secrets)
+.env
+
+# training pipeline: track scripts only, not heavy artifacts (venv, datasets,
+# adapters, fused models, GGUF weights). The classifier model is reproducible from
+# training/*.py; see training for the commands.
+training/.venv/
+training/data/
+training/adapters/
+training/fused/
+*.gguf
+*.pyc
+__pycache__/

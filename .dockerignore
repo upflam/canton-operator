@@ -1,0 +1,16 @@
+.git
+docs
+examples
+README.md
+*.b64
+*.sig
+priv*
+
+# training artifacts: keep only the quantized model the LLM image bakes; exclude the
+# venv, datasets, adapters, HF fused dir, and the large f16 GGUF from the build context.
+training/.venv
+training/data
+training/adapters
+training/__pycache__
+training/fused/qwen05
+training/fused/qwen05-f16.gguf
